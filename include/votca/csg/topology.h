@@ -53,20 +53,21 @@ typedef vector<std::shared_ptr<Interaction>> InteractionContainer;
 using namespace std;
 
 /**
-    \brief topology of the whole system
+        \brief topology of the whole system
 
-    The Topology class stores the topology of the system like the beads, bonds,
- molecules and residues.
+        The Topology class stores the topology of the system like the beads,
+ bonds, molecules and residues.
 
-    \todo internal management for ids and indices
+        \todo internal management for ids and indices
  **/
 class Topology {
 public:
-	/// constructor
-	Topology() : _time(0.0), _has_vel(false), _has_force(false) {
-		_bc = new OpenBox();
+  /// constructor
+  Topology() : _time(0.0), _has_vel(false), _has_force(false) {
+    _bc = new OpenBox();
+  }
 
-		virtual ~Topology();
+  virtual ~Topology();
 
   /**
    * \brief cleans up all the stored data
@@ -91,12 +92,12 @@ public:
                                            double m, double q);
 
   /**
-  * \brief get bead type or create it
-  * \param name typename
-  * \return pointer to bead type
-  *
-  * Returns an existing bead type or creates one if it doesn't exist yet
-  */
+   * \brief get bead type or create it
+   * \param name typename
+   * \return pointer to bead type
+   *
+   * Returns an existing bead type or creates one if it doesn't exist yet
+   */
   virtual std::shared_ptr<BeadType> GetOrCreateBeadType(string name);
 
   /**
@@ -126,7 +127,7 @@ public:
    * This function scans the topology and creates molecules based on the resiude
    * id.
    * All beads with the same resid are put int one molecule.
-  */
+   */
   void CreateMoleculesByResidue();
 
   /**
@@ -134,7 +135,7 @@ public:
    * \param name name of the new molecule
    *
    *  This function creates one big molecule for all beads in the topology.
-  */
+   */
   void CreateOneBigMolecule(string name);
 
   /**
@@ -420,51 +421,13 @@ protected:
   std::string _particle_group;
 };
 
-inline std::shared_ptr<Bead> Topology::CreateBead(byte_t symmetry, string name,
-                                                  shared_ptr<BeadType> type,
-                                                  int resnr, double m,
-                                                  double q) {
-
-  auto b = new Bead(std::make_shared<Topology>(*this), _beads.size(), type,
-                    symmetry, name, resnr, m, q);
-  auto shared_b = std::make_shared<Bead>(*b);
-  _beads.push_back(shared_b);
-  return shared_b;
-}
-
-inline std::shared_ptr<Molecule> Topology::CreateMolecule(string name) {
-  auto mol =
-      new Molecule(std::make_shared<Topology>(*this), _molecules.size(), name);
-  auto shared_mol = std::make_shared<Molecule>(*mol);
-  _molecules.push_back(shared_mol);
-  return shared_mol;
-}
-
-inline std::shared_ptr<Residue> Topology::CreateResidue(string name, int id) {
-  auto res = new Residue(std::make_shared<Topology>(*this), id, name);
-  auto shared_res = std::make_shared<Residue>(*res);
-  _residues.push_back(shared_res);
-  return shared_res;
-}
-
-inline std::shared_ptr<Residue> Topology::CreateResidue(string name) {
-  auto res =
-      new Residue(std::make_shared<Topology>(*this), _molecules.size(), name);
-  auto shared_res = std::make_shared<Residue>(*res);
-  _residues.push_back(shared_res);
-  return shared_res;
-}
-
-inline std::shared_ptr<Molecule> Topology::MoleculeByIndex(int index) {
-  return _molecules[index];
-}
-
 template <typename iteratable>
 inline void Topology::InsertExclusion(shared_ptr<Bead> bead1, iteratable &l) {
   _exclusions.InsertExclusion(bead1, l);
 }
-}
-}
+
+} // namespace csg
+} // namespace votca
 
 #include "interaction.h"
 

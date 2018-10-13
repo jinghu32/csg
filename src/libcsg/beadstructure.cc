@@ -79,10 +79,11 @@ void BeadStructure::CalculateStructure_() {
 
 void BeadStructure::AddBead(shared_ptr<BaseBead> bead) {
 
-	for(auto unallowed_class : unallowed_bead_types_){
-    if(bead->getInstanceType() == unallowed_class){
+  for (auto unallowed_class : unallowed_bead_types_) {
+    if (bead->getInstanceType() == unallowed_class) {
       throw runtime_error("Cannot store class type"
-          " "+bead->getInstanceType()+" in the container.");
+                          " " +
+                          bead->getInstanceType() + " in the container.");
     }
   }
 
@@ -157,11 +158,11 @@ vector<shared_ptr<BaseBead>> BeadStructure::getNeighBeads(int index) {
   return neighbeads;
 }
 
-vector<int> BeadStructure::getIdsOfBeadsWithName(const string &name){ 
+vector<int> BeadStructure::getIdsOfBeadsWithName(const string &name) {
   vector<int> ids;
   auto iterator = beads_.begin();
-  while(iterator!=beads_.end()){
-    if(iterator->second->getName() == name){
+  while (iterator != beads_.end()) {
+    if (iterator->second->getName() == name) {
       ids.push_back(iterator->second->getId());
     }
     ++iterator;
@@ -169,22 +170,22 @@ vector<int> BeadStructure::getIdsOfBeadsWithName(const string &name){
   return ids;
 }
 
-vector<int> BeadStructure::getBeadIds(){
+vector<int> BeadStructure::getBeadIds() {
   vector<int> ids;
   auto iterator = beads_.begin();
-  while(iterator!=beads_.end()){
+  while (iterator != beads_.end()) {
     ids.push_back(iterator->second->getId());
     ++iterator;
   }
   return ids;
 }
 
-string BeadStructure::getBeadName(int id){
-  if(id<0){
+string BeadStructure::getBeadName(int id) {
+  if (id < 0) {
     string err = "bead with negative id " + to_string(id);
     throw invalid_argument(err);
   }
-  if(!beads_.count(id)){
+  if (!beads_.count(id)) {
     string err = "bead with id: " + to_string(id) + " is not found.";
     throw invalid_argument(err);
   }

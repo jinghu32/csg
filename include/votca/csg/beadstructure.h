@@ -84,31 +84,33 @@ public:
   /**
    * \brief Get the bead with the specified id
    **/
-  template<typename T>
-  std::shared_ptr<T> getBead(int id) const {
-    if(id<0){                                                                      
-      std::string err = "bead with negative id " + std::to_string(id);                       
-      throw std::invalid_argument(err);                                                 
-    }                                                                              
-    if(!beads_.count(id)){                                                         
-      std::string err = "bead with id: " + std::to_string(id) + " is not found.";            
-      throw std::invalid_argument(err);                                                 
+  template <typename T> std::shared_ptr<T> getBead(int id) const {
+    if (id < 0) {
+      std::string err = "bead with negative id " + std::to_string(id);
+      throw std::invalid_argument(err);
+    }
+    if (!beads_.count(id)) {
+      std::string err =
+          "bead with id: " + std::to_string(id) + " is not found.";
+      throw std::invalid_argument(err);
     }
 
-    if(T::getClassType()=="base"){
+    if (T::getClassType() == "base") {
       return dynamic_pointer_cast<T>(beads_.at(id));
     }
-    if(T::getClassType()==beads_.at(id)->getInstanceType()){
+    if (T::getClassType() == beads_.at(id)->getInstanceType()) {
       return dynamic_pointer_cast<T>(beads_.at(id));
     }
 
-    std::string err = "You cannot get bead of type "+ T::getClassType() + " as "
-      "the original instance was of type " + beads_.at(id)->getInstanceType();
+    std::string err = "You cannot get bead of type " + T::getClassType() +
+                      " as "
+                      "the original instance was of type " +
+                      beads_.at(id)->getInstanceType();
     throw std::invalid_argument(err);
   }
 
   /**
-   * \brief Gets all the bead iDs with the particular name 
+   * \brief Gets all the bead iDs with the particular name
    **/
   std::vector<int> getIdsOfBeadsWithName(const std::string &name);
 
@@ -116,7 +118,7 @@ public:
    * \brief Get the ids of all the beads
    **/
   std::vector<int> getBeadIds();
-  
+
   /**
    * \brief Get the name of the bead by passing in its Id
    **/
@@ -167,10 +169,10 @@ private:
   bool graphUpToDate;
   shared_ptr<votca::tools::Graph> graph_;
   std::set<Edge> connections_;
-  std::map<int,std::shared_ptr<BaseBead>> beads_;
+  std::map<int, std::shared_ptr<BaseBead>> beads_;
   std::map<int, std::shared_ptr<votca::tools::GraphNode>> graphnodes_;
 };
-}
-}
+} // namespace csg
+} // namespace votca
 
 #endif // VOTCA_CSG_BEADSTRUCTURE_H

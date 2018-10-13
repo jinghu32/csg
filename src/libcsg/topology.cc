@@ -41,6 +41,44 @@ void Topology::Cleanup() {
   _bc = new OpenBox();
 }
 
+shared_ptr<Bead> Topology::CreateBead(byte_t symmetry, string name,
+                                      shared_ptr<BeadType> type, int resnr,
+                                      double m, double q) {
+
+  auto b = new Bead(std::make_shared<Topology>(*this), _beads.size(), type,
+                    symmetry, name, resnr, m, q);
+  auto shared_b = std::make_shared<Bead>(*b);
+  _beads.push_back(shared_b);
+  return shared_b;
+}
+
+shared_ptr<Molecule> Topology::CreateMolecule(string name) {
+  auto mol =
+      new Molecule(std::make_shared<Topology>(*this), _molecules.size(), name);
+  auto shared_mol = std::make_shared<Molecule>(*mol);
+  _molecules.push_back(shared_mol);
+  return shared_mol;
+}
+
+shared_ptr<Residue> Topology::CreateResidue(string name, int id) {
+  auto res = new Residue(std::make_shared<Topology>(*this), id, name);
+  auto shared_res = std::make_shared<Residue>(*res);
+  _residues.push_back(shared_res);
+  return shared_res;
+}
+
+shared_ptr<Residue> Topology::CreateResidue(string name) {
+  auto res =
+      new Residue(std::make_shared<Topology>(*this), _molecules.size(), name);
+  auto shared_res = std::make_shared<Residue>(*res);
+  _residues.push_back(shared_res);
+  return shared_res;
+}
+
+shared_ptr<Molecule> Topology::MoleculeByIndex(int index) {
+  return _molecules[index];
+}
+
 /// \todo implement checking, only used in xml topology reader
 void Topology::CreateMoleculesByRange(string name, int first, int nbeads,
                                       int nmolecules) {
@@ -98,14 +136,14 @@ void Topology::Add(shared_ptr<Topology> top) {
                bead->getResnr() + res0, bead->getM(), bead->getQ());
   }
 
-  for (auto res : top->_residues){
-	  CreateResidue(res->getName());
+  for (auto res : top->_residues) {
+    CreateResidue(res->getName());
   }
 
   for (auto mol : top->_molecules) {
     auto mi = CreateMolecule(mol->getName());
     for (int i = 0; i < mi->BeadCount(); i++) {
-      mi->AddBead(mi->getBead(i));
+      mi->AddBead(mi->getBead<Bead>(i));
     }
   }
 }
@@ -136,7 +174,7 @@ void Topology::CopyTopologyData(shared_ptr<Topology> top) {
   for (auto mol : top->_molecules) {
     auto mi = CreateMolecule(mol->getName());
     for (int i = 0; i < mol->BeadCount(); i++) {
-      int beadid = mol->getBead(i)->getId();
+      int beadid = mol->getBead<Bead>(i)->getId();
       mi->AddBead(_beads[beadid]);
     }
   }
@@ -278,5 +316,5 @@ double Topology::ShortestBoxSize() {
 
   return min(la, min(lb, lc));
 }
-}
-}
+} // namespace csg
+} // namespace votca

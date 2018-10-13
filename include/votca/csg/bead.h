@@ -319,6 +319,7 @@ public:
   void setOptions(Property &options) { _options = &options; }
 
   static std::string getClassType() { return class_type_; }
+
 protected:
   vector<int> _parent_beads;
 
@@ -340,8 +341,8 @@ protected:
   bool _bF;
 
   /// constructur
-  Bead(std::shared_ptr<Topology> owner, int id, std::shared_ptr<BeadType> type, byte_t symmetry, string name,
-       int resnr, double m, double q)
+  Bead(std::shared_ptr<Topology> owner, int id, std::shared_ptr<BeadType> type,
+       byte_t symmetry, string name, int resnr, double m, double q)
       : _symmetry(symmetry), _q(q), _resnr(resnr) {
     _parent = owner;
     setId(id);
@@ -425,7 +426,7 @@ inline void Bead::HasU(bool b) { _bU = b; }
 inline void Bead::HasV(bool b) { _bV = b; }
 
 inline void Bead::HasW(bool b) { _bW = b; }
-}
-}
+} // namespace csg
+} // namespace votca
 
 #endif // _VOTCA_CSG_BEAD_H

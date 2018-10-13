@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2009-2018 The VOTCA Development Team (http://www.votca.org)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,219 +15,213 @@
  *
  */
 
-
-// TODO: This code need lots of cleaning up! please do not look at anything in here!
+// TODO: This code need lots of cleaning up! please do not look at anything in
+// here!
 //
 
-#include <math.h>
-#include <iostream>
-#include <fstream>
-#include <map>
-#include <string>
-#include <votca/tools/tokenizer.h>
-#include <votca/tools/rangeparser.h>
 #include "analysistool.h"
 #include "bondedstatistics.h"
-#include "tabulatedpotential.h"
 #include "stdanalysis.h"
+#include "tabulatedpotential.h"
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <math.h>
+#include <string>
 #include <votca/csg/csgapplication.h>
+#include <votca/tools/rangeparser.h>
+#include <votca/tools/tokenizer.h>
 
 using namespace std;
 
-class CsgBoltzmann
-    : public CsgApplication
-{
+class CsgBoltzmann : public CsgApplication {
 public:
+  string ProgramName() { return "csg_boltzmann"; }
+  void HelpText(ostream &out) {
+    out << "Performs tasks that are needed for simple boltzmann\n"
+           "inversion in an interactive environment.";
+  }
+  bool DoTrajectory() { return true; }
+  bool DoMapping() { return true; }
 
-    string ProgramName() { return "csg_boltzmann"; }
-    void HelpText(ostream &out) {
-        out << "Performs tasks that are needed for simple boltzmann\n"
-            "inversion in an interactive environment.";
-    }
-    bool DoTrajectory() { return true; }
-    bool DoMapping() { return true; }
+  void Initialize();
+  bool EvaluateOptions();
+  void Run();
 
-    void Initialize();
-    bool EvaluateOptions();
-    void Run();
-
-    void InteractiveMode();
-    bool EvaluateTopology(Topology *top, Topology *top_ref);
+  void InteractiveMode();
+  bool EvaluateTopology(Topology *top, Topology *top_ref);
 
 protected:
-
-    ExclusionList *CreateExclusionList(Molecule &atomistic, Molecule &cg);
-    BondedStatistics _bs;
-
+  ExclusionList *CreateExclusionList(Molecule &atomistic, Molecule &cg);
+  BondedStatistics _bs;
 };
-void CsgBoltzmann::Initialize()
-{
-    CsgApplication::Initialize();
-    AddProgramOptions("Special options")
-        ("excl", boost::program_options::value<string>(), "write atomistic exclusion list to file");
+void CsgBoltzmann::Initialize() {
+  CsgApplication::Initialize();
+  AddProgramOptions("Special options")(
+      "excl", boost::program_options::value<string>(),
+      "write atomistic exclusion list to file");
 
-    AddObserver(&_bs);
+  AddObserver(&_bs);
 }
 
-bool CsgBoltzmann::EvaluateOptions()
-{
-        CsgApplication::EvaluateOptions();
-        if (OptionsMap().count("excl")) {
-            CheckRequired("cg", "excl options needs a mapping file");
-	}
-        return true;
+bool CsgBoltzmann::EvaluateOptions() {
+  CsgApplication::EvaluateOptions();
+  if (OptionsMap().count("excl")) {
+    CheckRequired("cg", "excl options needs a mapping file");
+  }
+  return true;
 }
 
-bool CsgBoltzmann::EvaluateTopology(Topology *top, Topology *top_ref)
-{
-    if (OptionsMap().count("excl")) {
-        ExclusionList *ex;
-        if (top_ref->MoleculeCount() > 1)
-            cout << "WARNING: cannot create exclusion list for topology with"
-                "multiple molecules, using only first molecule\n";
+bool CsgBoltzmann::EvaluateTopology(Topology *top, Topology *top_ref) {
+  if (OptionsMap().count("excl")) {
+    ExclusionList *ex;
+    if (top_ref->MoleculeCount() > 1)
+      cout << "WARNING: cannot create exclusion list for topology with"
+              "multiple molecules, using only first molecule\n";
 
-        cout << "Writing exclusion list for atomistic molecule "
-                << top_ref->MoleculeByIndex(0)->getName()
-                << " in coarse grained representation "
-                << top_ref->MoleculeByIndex(0)->getName() << endl;
+    cout << "Writing exclusion list for atomistic molecule "
+         << top_ref->MoleculeByIndex(0)->getName()
+         << " in coarse grained representation "
+         << top_ref->MoleculeByIndex(0)->getName() << endl;
 
-        ex = CreateExclusionList(*top_ref->MoleculeByIndex(0), *top->MoleculeByIndex(0));
-        ofstream fl;
-        fl.open(OptionsMap()["excl"].as<string > ().c_str());
-        fl << "# atomistic: " << top_ref->MoleculeByIndex(0)->getName()
-                << " cg: " << top_ref->MoleculeByIndex(0)->getName()
-                << " cgmap: " << OptionsMap()["cg"].as<string > () << endl;
-        fl << *ex;
-        fl.close();
-        delete ex;
-        return false;
+    ex = CreateExclusionList(*top_ref->MoleculeByIndex(0),
+                             *top->MoleculeByIndex(0));
+    ofstream fl;
+    fl.open(OptionsMap()["excl"].as<string>().c_str());
+    fl << "# atomistic: " << top_ref->MoleculeByIndex(0)->getName()
+       << " cg: " << top_ref->MoleculeByIndex(0)->getName()
+       << " cgmap: " << OptionsMap()["cg"].as<string>() << endl;
+    fl << *ex;
+    fl.close();
+    delete ex;
+    return false;
+  }
+  return true;
+}
+
+ExclusionList *CsgBoltzmann::CreateExclusionList(Molecule &atomistic,
+                                                 Molecule &cg) {
+  ExclusionList *ex = new ExclusionList();
+  // exclude all with all
+  {
+    list<shared_ptr<Bead>> excl_list;
+    for (int i = 0; i < atomistic.BeadCount(); ++i) {
+      excl_list.push_back(atomistic.getBead<Bead>(i));
     }
-    return true;
-}
+    ex->ExcludeList(excl_list);
+  }
 
-ExclusionList *CsgBoltzmann::CreateExclusionList(Molecule &atomistic, Molecule &cg)
-{
-    ExclusionList *ex = new ExclusionList();
-    //exclude all with all
-    {
-        list<shared_ptr<Bead>> excl_list;
-        for(int i=0; i<atomistic.BeadCount(); ++i) {
-            excl_list.push_back(atomistic.getBead<Bead>(i));
+  // remove exclusions from inside a mapped bead
+  auto at_top = atomistic.getParent();
+  for (int i = 0; i < cg.BeadCount(); ++i) {
+    vector<int> &w = cg.getBead<Bead>(i)->ParentBeads();
+    list<shared_ptr<Bead>> excl_list;
+    for (auto val : w) {
+      excl_list.push_back(at_top->getBead(val));
+    }
+    ex->Remove(excl_list);
+  }
+
+  // remove exclusion which come from atomistic topology and hence bonds and
+  // angles
+  auto cg_top = cg.getParent();
+  for (int i = 0; i < cg.BeadCount() - 1; ++i) {
+    for (int j = i + 1; j < cg.BeadCount(); ++j) {
+
+      auto bead_i = cg.getBead<Bead>(i);
+      auto bead_j = cg.getBead<Bead>(j);
+      if (cg_top->getExclusions().IsExcluded(bead_i, bead_j)) {
+        vector<int> &w = bead_i->ParentBeads();
+        vector<int> &v = bead_j->ParentBeads();
+        for (auto w_val : w) {
+          for (auto v_val : v) {
+            auto bead_w = at_top->getBead(w_val);
+            auto bead_v = at_top->getBead(v_val);
+            ex->RemoveExclusion(bead_w, bead_v);
+          }
         }
-        ex->ExcludeList(excl_list);
-    }
-
-    //remove exclusions from inside a mapped bead
-    auto at_top = atomistic.getParent();
-    for(int i=0; i<cg.BeadCount(); ++i) {
-      vector<int> &w = cg.getBead<Bead>(i)->ParentBeads();
-      list<shared_ptr<Bead>> excl_list;
-      for(auto val : w ){
-        excl_list.push_back(at_top->getBead(val));
       }
-      ex->Remove(excl_list);
     }
-
-    //remove exclusion which come from atomistic topology and hence bonds and angles
-    auto cg_top = cg.getParent();
-		for(int i=0; i<cg.BeadCount()-1; ++i) {
-			for(int j=i+1; j<cg.BeadCount(); ++j) {
-
-				auto bead_i = cg.getBead<Bead>(i);
-				auto bead_j = cg.getBead<Bead>(j);
-				if (cg_top->getExclusions().IsExcluded(bead_i,bead_j)){
-					vector<int> &w = bead_i->ParentBeads();
-					vector<int> &v = bead_j->ParentBeads();
-					for(auto w_val : w){
-						for(auto v_val : v){
-							auto bead_w = at_top->getBead(w_val);
-							auto bead_v = at_top->getBead(v_val);
-							ex->RemoveExclusion(bead_w,bead_v);
-						}
-					}
-				}
-			}
-    }
-    return ex;
+  }
+  return ex;
 }
 
-void CsgBoltzmann::Run()
-{
-    CsgApplication::Run();
-    if (OptionsMap().count("excl"))
-        return;
-    InteractiveMode();
+void CsgBoltzmann::Run() {
+  CsgApplication::Run();
+  if (OptionsMap().count("excl"))
+    return;
+  InteractiveMode();
 }
 
-void CsgBoltzmann::InteractiveMode()
-{    
-    std::map<std::string, AnalysisTool *> cmds;
-    TabulatedPotential tab;
-    StdAnalysis std;
-    tab.Register(cmds);
-    std.Register(cmds);
-    
-    string help_text = 
-        "Interactive mode, expecting commands:\n"
-        "help: show this help\n"
-        "q: quit\n"
-        "list: list all available bonds\n"
-    	"vals <file> <selection>: write values to file\n"
-    	"hist <file> <selection>: create histogram\n"
-    	"tab <file> <selection>: create tabulated potential\n"
-    	"autocor <file> <selection>: calculate autocorrelation, only one row allowed in selection!\n" 
-    	"cor <file> <selection>: calculate correlations, first row is correlated with all other rows";
+void CsgBoltzmann::InteractiveMode() {
+  std::map<std::string, AnalysisTool *> cmds;
+  TabulatedPotential tab;
+  StdAnalysis std;
+  tab.Register(cmds);
+  std.Register(cmds);
 
-    cout << help_text << endl;
-    
-    while(1) {
-        string line;
-        cout << "> ";
-        getline(cin, line);
+  string help_text = "Interactive mode, expecting commands:\n"
+                     "help: show this help\n"
+                     "q: quit\n"
+                     "list: list all available bonds\n"
+                     "vals <file> <selection>: write values to file\n"
+                     "hist <file> <selection>: create histogram\n"
+                     "tab <file> <selection>: create tabulated potential\n"
+                     "autocor <file> <selection>: calculate autocorrelation, "
+                     "only one row allowed in selection!\n"
+                     "cor <file> <selection>: calculate correlations, first "
+                     "row is correlated with all other rows";
 
-        boost::trim(line);
-        vector<string> args;
-        Tokenizer tok(line, " \t");
-        tok.ToVector(args);
+  cout << help_text << endl;
 
-        if(args.size() == 0) continue;
+  while (1) {
+    string line;
+    cout << "> ";
+    getline(cin, line);
 
-        string cmd = args.front();
-        args.erase(args.begin());
+    boost::trim(line);
+    vector<string> args;
+    Tokenizer tok(line, " \t");
+    tok.ToVector(args);
 
-    
-            if(cmd == "q") break;            
+    if (args.size() == 0)
+      continue;
 
-            std::map<string, AnalysisTool *>::iterator tool;
-            if(cmd == "help") {
-                if(args.size() == 0) {
-                    cout << help_text << endl;
-                    continue;
-                }
-                cmd = args.front();
-                args.erase(args.begin());
-                tool = cmds.find(cmd);
-                if(tool == cmds.end()) {
-                    cout << "error, no help item found" << endl;
-                    continue;
-                }
-                tool->second->Help(cmd, args);
-                cout << endl;
-                continue;
-            }
+    string cmd = args.front();
+    args.erase(args.begin());
 
-            tool = cmds.find(cmd);
-            if(tool == cmds.end()) {
-                cout << "error, command not found" << endl;
-                continue;
-            }
-            
-            tool->second->Command(_bs, cmd, args);
+    if (cmd == "q")
+      break;
+
+    std::map<string, AnalysisTool *>::iterator tool;
+    if (cmd == "help") {
+      if (args.size() == 0) {
+        cout << help_text << endl;
+        continue;
+      }
+      cmd = args.front();
+      args.erase(args.begin());
+      tool = cmds.find(cmd);
+      if (tool == cmds.end()) {
+        cout << "error, no help item found" << endl;
+        continue;
+      }
+      tool->second->Help(cmd, args);
+      cout << endl;
+      continue;
     }
+
+    tool = cmds.find(cmd);
+    if (tool == cmds.end()) {
+      cout << "error, command not found" << endl;
+      continue;
+    }
+
+    tool->second->Command(_bs, cmd, args);
+  }
 }
 
-int main(int argc, char **argv)
-{
-    CsgBoltzmann app;
-    app.Exec(argc, argv);
+int main(int argc, char **argv) {
+  CsgBoltzmann app;
+  app.Exec(argc, argv);
 }

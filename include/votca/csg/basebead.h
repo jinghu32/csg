@@ -21,8 +21,8 @@
 #include <memory>
 #include <string>
 
-#include <votca/csg/topologyitem.h>
 #include <votca/csg/moleculeitem.h>
+#include <votca/csg/topologyitem.h>
 
 #include <votca/tools/identity.h>
 #include <votca/tools/name.h>
@@ -48,15 +48,14 @@ class BaseBead : public TopologyItem,
                  public virtual Name,
                  public virtual Identity<int> {
 public:
-
   virtual const std::string getLabel() const {
-    return "Id "+std::to_string(getId())+":Bead "+getName(); 
+    return "Id " + std::to_string(getId()) + ":Bead " + getName();
   }
 
   /**
    * destructor
    */
-  virtual ~BaseBead()  {}
+  virtual ~BaseBead() {}
 
   /**
    * get the bead type
@@ -115,13 +114,13 @@ public:
   /** set has position to true */
   void HasPos(bool true_or_false) { _bPos = true_or_false; }
 
-  std::string getInstanceType() { return instance_type_; } 
+  std::string getInstanceType() { return instance_type_; }
   static std::string getClassType() { return class_type_; }
 
 protected:
   BaseBead()
-      : TopologyItem(nullptr), MoleculeItem(nullptr), _type(nullptr), 
-      _mass(0.0), _bPos(false),  instance_type_("base"){};
+      : TopologyItem(nullptr), MoleculeItem(nullptr), _type(nullptr),
+        _mass(0.0), _bPos(false), instance_type_("base"){};
 
   std::shared_ptr<BeadType> _type;
 
@@ -143,7 +142,7 @@ inline const vec &BaseBead::getPos() const {
   assert(_bPos);
   return _pos;
 }
-}
-}
+} // namespace csg
+} // namespace votca
 
 #endif // _VOTCA_CSG_BASEBEAD_H

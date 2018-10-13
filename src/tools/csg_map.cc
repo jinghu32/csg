@@ -89,7 +89,7 @@ void EvalConfiguration(Topology *top, Topology *top_ref) {
                     int beadid = mol->getBead<Bead>(i)->getId();
 
                     auto bi = mol->getBead<Bead>(i);
-                    auto type = hybtol->GetOrCreateBeadType(bi->getType<Bead>()->getName());
+                    auto type = hybtol->GetOrCreateBeadType(bi->getType()->getName());
                     auto bn = hybtol->CreateBead(bi->getSymmetry(), bi->getName(), type, bi->getResnr(), bi->getM(), bi->getQ());
                     bn->setOptions(bi->Options());
                     bn->setPos(bi->getPos());
