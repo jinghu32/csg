@@ -15,15 +15,14 @@
  *
  */
 
-#ifndef _VOTCA_CSG_BEADSTRUCTURE_H
-#define _VOTCA_CSG_BEADSTRUCTURE_H
+#ifndef VOTCA_CSG_BEADSTRUCTURE_H
+#define VOTCA_CSG_BEADSTRUCTURE_H
 
 #include <list>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
-#include <type_traits>
 
 #include <votca/csg/basebead.h>
 #include <votca/csg/beadstructure.h>
@@ -80,13 +79,13 @@ public:
    *
    * The same bead cannot be added twice.
    **/
-  void AddBead(BaseBead *bead);
+  void AddBead(std::shared_ptr<BaseBead> bead);
 
   /**
    * \brief Get the bead with the specified id
    **/
   template<typename T>
-  T getBead(int id) const {
+  std::shared_ptr<T> getBead(int id) const {
     if(id<0){                                                                      
       std::string err = "bead with negative id " + std::to_string(id);                       
       throw std::invalid_argument(err);                                                 
@@ -96,15 +95,14 @@ public:
       throw std::invalid_argument(err);                                                 
     }
 
-    using G = typename std::remove_pointer<T>::type;    
-    if(G::getClassType()=="base"){
-      return dynamic_cast<T>(beads_.at(id));
+    if(T::getClassType()=="base"){
+      return dynamic_pointer_cast<T>(beads_.at(id));
     }
-    if(G::getClassType()==beads_.at(id)->getInstanceType()){
-      return dynamic_cast<T>(beads_.at(id));
+    if(T::getClassType()==beads_.at(id)->getInstanceType()){
+      return dynamic_pointer_cast<T>(beads_.at(id));
     }
 
-    std::string err = "You cannot get bead of type "+ G::getClassType() + " as "
+    std::string err = "You cannot get bead of type "+ T::getClassType() + " as "
       "the original instance was of type " + beads_.at(id)->getInstanceType();
     throw std::invalid_argument(err);
   }
@@ -135,7 +133,7 @@ public:
   /**
    * \brief Return a vector of all the beads neighboring the index
    **/
-  std::vector<BaseBead *> getNeighBeads(int index);
+  std::vector<std::shared_ptr<BaseBead>> getNeighBeads(int index);
 
   /**
    * \brief Bread the beadstructure up into molecular units
@@ -169,10 +167,10 @@ private:
   bool graphUpToDate;
   shared_ptr<votca::tools::Graph> graph_;
   std::set<Edge> connections_;
-  std::map<int, BaseBead *> beads_;
+  std::map<int,std::shared_ptr<BaseBead>> beads_;
   std::map<int, std::shared_ptr<votca::tools::GraphNode>> graphnodes_;
 };
 }
 }
 
-#endif // _VOTCA_CSG_BEADSTRUCTURE_H
+#endif // VOTCA_CSG_BEADSTRUCTURE_H

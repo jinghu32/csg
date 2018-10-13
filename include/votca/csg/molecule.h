@@ -18,6 +18,7 @@
 #ifndef _VOTCA_CSG_MOLECULE_H
 #define	_VOTCA_CSG_MOLECULE_H
 
+#include <memory>
 #include <vector>
 #include <map>
 #include <string>
@@ -25,8 +26,6 @@
 
 #include "beadstructure.h"
 #include "topologyitem.h"
-
-//#include "bead.h"
 
 namespace votca { namespace csg {
 
@@ -55,9 +54,9 @@ public:
     /// Add an interaction to the molecule
     /// This is seperate from a Connect Beads method, an interaction does not
     /// guarantee a bond as far as I know. Though I will need to check. 
-    void AddInteraction(Interaction *ic) { _interactions.push_back(ic);}
+    void AddInteraction(std::shared_ptr<Interaction> ic) { _interactions.push_back(ic);}
 
-    vector<Interaction *> Interactions() { return _interactions; }
+    vector<std::shared_ptr<Interaction>> Interactions() { return _interactions; }
 
     template<typename T>
     void setUserData(T *userdata) { _userdata = (void*)userdata; }
@@ -67,12 +66,12 @@ public:
     
 private:
   
-    vector<Interaction*> _interactions;
+    vector<std::shared_ptr<Interaction>> _interactions;
      
     void *_userdata;
     
     /// constructor
-    Molecule(Topology *parent, int id, string name)
+    Molecule(std::shared_ptr<Topology> parent, int id, string name)
         : Name(name), Identity(id), TopologyItem(parent)
     {
       unallowed_bead_types_ = {"base"};

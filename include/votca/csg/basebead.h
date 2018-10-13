@@ -18,6 +18,7 @@
 #ifndef _VOTCA_CSG_BASEBEAD_H
 #define _VOTCA_CSG_BASEBEAD_H
 
+#include <memory>
 #include <string>
 
 #include <votca/csg/topologyitem.h>
@@ -61,19 +62,19 @@ public:
    * get the bead type
    * \return const bead type pointer
    */
-  virtual const BeadType *getType() const { return _type; }
+  virtual const std::shared_ptr<BeadType> getType() const { return _type; }
 
   /**
    * set the bead type
    * \param bead type object
    */
-  virtual void setType(BeadType *type) { _type = type; }
+  virtual void setType(std::shared_ptr<BeadType> type) { _type = type; }
 
   /**
    * get the bead type
    * \return - non constant bead type pointer
    */
-  virtual BeadType *Type() const { return _type; }
+  virtual std::shared_ptr<BeadType> Type() const { return _type; }
 
   /**
    * get the mass of the base bead
@@ -122,7 +123,8 @@ protected:
       : TopologyItem(nullptr), MoleculeItem(nullptr), _type(nullptr), 
       _mass(0.0), _bPos(false),  instance_type_("base"){};
 
-  BeadType *_type;
+  std::shared_ptr<BeadType> _type;
+
   double _mass;
   vec _pos;
   bool _bPos;

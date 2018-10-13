@@ -30,7 +30,7 @@ using namespace std;
  * Internal Functions *
  **********************/
 
-shared_ptr<GraphNode> BaseBeadToGraphNode(BaseBead *basebead) {
+shared_ptr<GraphNode> BaseBeadToGraphNode(shared_ptr<BaseBead> basebead) {
   unordered_map<string, double> attributes1;
   unordered_map<string, string> attributes2;
 
@@ -77,9 +77,9 @@ void BeadStructure::CalculateStructure_() {
  * Public Facing Functions *
  ***************************/
 
-void BeadStructure::AddBead(BaseBead *bead) {
+void BeadStructure::AddBead(shared_ptr<BaseBead> bead) {
 
-  for(auto unallowed_class : unallowed_bead_types_){
+	for(auto unallowed_class : unallowed_bead_types_){
     if(bead->getInstanceType() == unallowed_class){
       throw runtime_error("Cannot store class type"
           " "+bead->getInstanceType()+" in the container.");
@@ -146,29 +146,17 @@ bool BeadStructure::isStructureEquivalent(BeadStructure &beadstructure) {
   return *graph_ == *beadstructure.graph_;
 }
 
-vector<BaseBead *> BeadStructure::getNeighBeads(int index) {
+vector<shared_ptr<BaseBead>> BeadStructure::getNeighBeads(int index) {
   if (!graphUpToDate)
     InitializeGraph_();
   auto neighbor_ids = graph_->getNeighVertices(index);
-  vector<BaseBead *> neighbeads;
+  vector<shared_ptr<BaseBead>> neighbeads;
   for (auto node_id : neighbor_ids) {
     neighbeads.push_back(beads_[node_id]);
   }
   return neighbeads;
 }
-/*
-BaseBead *BeadStructure::getBead(int id) {
-  if(id<0){
-    string err = "bead with negative id " + to_string(id);
-    throw invalid_argument(err);
-  }
-  if(!beads_.count(id)){
-    string err = "bead with id: " + to_string(id) + " is not found.";
-    throw invalid_argument(err);
-  }
-  return beads_[id];
-}
-*/
+
 vector<int> BeadStructure::getIdsOfBeadsWithName(const string &name){ 
   vector<int> ids;
   auto iterator = beads_.begin();
